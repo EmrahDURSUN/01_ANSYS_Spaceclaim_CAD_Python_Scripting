@@ -27,14 +27,14 @@ dEtch=Parameters.EtchDepth
 
 def createBoundayCurves(radius, dEtch, hCr1, hEtch, width, hAu, hCr2):
     boundary = List[ITrimmedCurve]()
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius-dEtch),MM(0),MM(hCr1) ),            Point.Create(MM(radius-dEtch),MM(0),MM(-hEtch) )            ) ) #0-1
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius-dEtch),MM(0),MM(-hEtch) ),          Point.Create(MM(radius+width+dEtch),MM(0),MM(-hEtch) )      ) ) #1-2
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width+dEtch),MM(0),MM(-hEtch) ),    Point.Create(MM(radius+dEtch+width),MM(0),MM(hCr1) )        ) ) #2-3
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width+dEtch),MM(0),MM(hCr1) ) ,     Point.Create(MM(radius+width),MM(0),MM(hCr1) )              ) ) #3-4
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width),MM(0),MM(hCr1) ) ,           Point.Create(MM(radius+width),MM(0),MM(hCr1+hAu+hCr2) )     ) ) #4-5
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width),MM(0),MM(hCr1+hAu+hCr2) ),   Point.Create(MM(radius),MM(0),MM(hCr1+hAu+hCr2) )           ) ) #5-6
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius),MM(0),MM(hCr1+hAu+hCr2) ),         Point.Create(MM(radius),MM(0),MM(hCr1) )                    ) ) #6-7
-    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius),MM(0),MM(hCr1) ),                  Point.Create(MM(radius-dEtch),MM(0),MM(hCr1) )              ) ) #7-0
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius-dEtch),MM(0),MM(hCr1) ),                     Point.Create(MM(radius-dEtch),MM(0),MM(-hEtch) )                    ) ) #0-1
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius-dEtch),MM(0),MM(-hEtch) ),                   Point.Create(MM(radius+width+dEtch),MM(0),MM(-hEtch) )        ) ) #1-2
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width+dEtch),MM(0),MM(-hEtch) ),       Point.Create(MM(radius+dEtch+width),MM(0),MM(hCr1) )           ) ) #2-3
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width+dEtch),MM(0),MM(hCr1) ) ,         Point.Create(MM(radius+width),MM(0),MM(hCr1) )                     ) ) #3-4
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width),MM(0),MM(hCr1) ) ,                   Point.Create(MM(radius+width),MM(0),MM(hCr1+hAu+hCr2) )     ) ) #4-5
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius+width),MM(0),MM(hCr1+hAu+hCr2) ),   Point.Create(MM(radius),MM(0),MM(hCr1+hAu+hCr2) )               ) ) #5-6
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius),MM(0),MM(hCr1+hAu+hCr2) ),             Point.Create(MM(radius),MM(0),MM(hCr1) )                                ) ) #6-7
+    boundary.Add( CurveSegment.Create(   Point.Create(MM(radius),MM(0),MM(hCr1) ),                              Point.Create(MM(radius-dEtch),MM(0),MM(hCr1) )                       ) ) #7-0
     return boundary
 
 # Constructor MoveSurface Anda Revolve
@@ -85,14 +85,11 @@ body = result.CreatedBody.SetName('ChromiumForSurfacePassivation')
 ColorHelper.SetColor(Selection.CreateByNames('ChromiumForSurfacePassivation'), Color.Gray)
 # EndBlock
 
-
-createBoundayCurves(radius, dEtch, hCr1, hEtch, width, hAu, hCr2)
-
 # Create List of Surfaces by the boundary
 plaBoReList = List[PlanarBodyResult]()
 t = 0
 while t <2: #number of rings is 2 for now, thus wejust need to PlanarBodyResult
-    plaBoReList.Add(PlanarBody.Create(Plane.PlaneZX, boundary)) 
+    plaBoReList.Add(PlanarBody.Create(Plane.PlaneZX, createBoundayCurves(radius, dEtch, hCr1, hEtch, width, hAu, hCr2))) 
     plaBoReList[t].CreatedBody.SetName(t.ToString())
     t = t + 1
 
@@ -106,6 +103,23 @@ MoveSurfaceAndRevolveSymetrically(1 ,225, ringAngleSecond)
 #showLayersSeparated(0.001)
 createPlane(Parameters.PlaneAngle)
 #result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
+Selection.Clear()
+ViewHelper.ZoomToEntity()
+# EndBlock
+
+###################
+
+# Round Edges to show edged region
+selectFirstRing= EdgeSelection.Create(GetRootPart().Bodies[0].Faces[6].Edges)
+result = ConstantRound.Execute(selectFirstRing, MM(hEtch), ConstantRoundOptions())
+selectSecondRing = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[7].Edges)
+result2 = ConstantRound.Execute(selectSecondRing, MM(hEtch), ConstantRoundOptions())
+
+
+# Set Section View and Zoom to Entity
+#showLayersSeparated(0.001)
+createPlane(Parameters.PlaneAngle)
+result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
 Selection.Clear()
 ViewHelper.ZoomToEntity()
 # EndBlock
