@@ -1,0 +1,2 @@
+# 01_ANSYS_Spaceclaim_CAD_Python_Scripting
+ Py_Scripts_Cad_Automation
