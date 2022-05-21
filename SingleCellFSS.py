@@ -99,6 +99,33 @@ ringAngleSecond = DEG(135)-angle-oangle  #Location of second ring
 MoveSurfaceAndRevolveSymetrically(0, 45, ringAngleFirst)
 MoveSurfaceAndRevolveSymetrically(1 ,225, ringAngleSecond)
 
+def moreCutForAccurateUndercut(bo, fa):
+    selection = FaceSelection.Create(GetRootPart().Bodies[bo].Faces[fa])
+    axisSelection = Selection.Create(GetRootPart().CoordinateSystems[0].Axes[2])
+    axis = RevolveFaces.GetAxisFromSelection(selection, axisSelection)
+    options = RevolveFaceOptions()
+    options.ExtrudeType = ExtrudeType.ForceCut
+    result = RevolveFaces.Execute(selection, axis, DEG(1.86), options)
+    result = RevolveFaces.Execute(selection, axis, DEG(-1.86), options)
+    
+moreCutForAccurateUndercut(0, 9)
+moreCutForAccurateUndercut(0, 10)
+moreCutForAccurateUndercut(0, 14)
+moreCutForAccurateUndercut(0, 15)
+
+moreCutForAccurateUndercut(1, 7)
+moreCutForAccurateUndercut(1, 11)
+moreCutForAccurateUndercut2(1, 9)
+moreCutForAccurateUndercut2(1, 13)
+
+# Round Edges to show edged region
+selectFirstRing= EdgeSelection.Create(GetRootPart().Bodies[0].Faces[6].Edges)
+result = ConstantRound.Execute(selectFirstRing, MM(hEtch), ConstantRoundOptions())
+selectSecondRing = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[7].Edges)
+result2 = ConstantRound.Execute(selectSecondRing, MM(hEtch), ConstantRoundOptions())
+
+###################
+
 # Set Section View and Zoom to Entity
 #showLayersSeparated(0.001)
 createPlane(Parameters.PlaneAngle)
@@ -107,19 +134,5 @@ Selection.Clear()
 ViewHelper.ZoomToEntity()
 # EndBlock
 
-###################
+######################################################################
 
-# Round Edges to show edged region
-selectFirstRing= EdgeSelection.Create(GetRootPart().Bodies[0].Faces[6].Edges)
-result = ConstantRound.Execute(selectFirstRing, MM(hEtch), ConstantRoundOptions())
-selectSecondRing = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[7].Edges)
-result2 = ConstantRound.Execute(selectSecondRing, MM(hEtch), ConstantRoundOptions())
-
-
-# Set Section View and Zoom to Entity
-#showLayersSeparated(0.001)
-createPlane(Parameters.PlaneAngle)
-result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
-Selection.Clear()
-ViewHelper.ZoomToEntity()
-# EndBlock
