@@ -9,7 +9,10 @@ while GetRootPart().Curves.Count > 0:
     GetRootPart().Curves[0].Delete()
 while GetRootPart().DatumPlanes.Count > 0:
     GetRootPart().DatumPlanes[0].Delete()
-        
+while GetRootPart().DatumPoints.Count > 0:
+    GetRootPart().DatumPoints[0].Delete()
+   
+   
 # Get Input Parameters
 per=Parameters.Periodicity/2
 subThick=Parameters.SubsThickness
@@ -23,7 +26,6 @@ oangle=Parameters.OpeningAngle
 hEtch=Parameters.EtchHeight
 dEtch=Parameters.EtchDepth
 # End Parameters
-
 
 def createBoundayCurves(radius, dEtch, hCr1, hEtch, width, hAu, hCr2):
     boundary = List[ITrimmedCurve]()
@@ -99,14 +101,16 @@ ringAngleSecond = DEG(135)-angle-oangle  #Location of second ring
 MoveSurfaceAndRevolveSymetrically(0, 45, ringAngleFirst)
 MoveSurfaceAndRevolveSymetrically(1 ,225, ringAngleSecond)
 
+gap = dEtch/radius*(180/math.pi)
+
 def moreCutForAccurateUndercut(bo, fa):
     selection = FaceSelection.Create(GetRootPart().Bodies[bo].Faces[fa])
     axisSelection = Selection.Create(GetRootPart().CoordinateSystems[0].Axes[2])
     axis = RevolveFaces.GetAxisFromSelection(selection, axisSelection)
     options = RevolveFaceOptions()
     options.ExtrudeType = ExtrudeType.ForceCut
-    result = RevolveFaces.Execute(selection, axis, DEG(1.86), options)
-    result = RevolveFaces.Execute(selection, axis, DEG(-1.86), options)
+    result = RevolveFaces.Execute(selection, axis, DEG(gap), options)
+    result = RevolveFaces.Execute(selection, axis, DEG(-gap), options)
     
 moreCutForAccurateUndercut(0, 9)
 moreCutForAccurateUndercut(0, 10)
@@ -115,8 +119,8 @@ moreCutForAccurateUndercut(0, 15)
 
 moreCutForAccurateUndercut(1, 7)
 moreCutForAccurateUndercut(1, 11)
-moreCutForAccurateUndercut2(1, 9)
-moreCutForAccurateUndercut2(1, 13)
+moreCutForAccurateUndercut(1, 9)
+moreCutForAccurateUndercut(1, 13)
 
 # Round Edges to show edged region
 selectFirstRing= EdgeSelection.Create(GetRootPart().Bodies[0].Faces[6].Edges)
@@ -124,15 +128,13 @@ result = ConstantRound.Execute(selectFirstRing, MM(hEtch), ConstantRoundOptions(
 selectSecondRing = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[7].Edges)
 result2 = ConstantRound.Execute(selectSecondRing, MM(hEtch), ConstantRoundOptions())
 
-###################
+######################################################################
+# END OF REVOLVE WAY
 
 # Set Section View and Zoom to Entity
-#showLayersSeparated(0.001)
+#showLayersSeparated(0.1)
 createPlane(Parameters.PlaneAngle)
-#result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
+result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
 Selection.Clear()
 ViewHelper.ZoomToEntity()
 # EndBlock
-
-######################################################################
-
