@@ -1,3 +1,4 @@
+
 # Python Script, API Version = V22 Beta
 import math
 
@@ -65,6 +66,7 @@ result = BlockBody.Create(Point.Create(MM(-per), MM(-per), MM(hCr1+hAu)), Point.
 body = result.CreatedBody.SetName('ChromiumForSurfacePassivation')
 ColorHelper.SetColor(Selection.CreateByNames('ChromiumForSurfacePassivation'), Color.Gray)
 # EndBlock
+  
   
 # Beginning of Face Cut   
 ######################################################################
@@ -135,8 +137,11 @@ options = ExtrudeFaceOptions()
 off = OffsetFaces.Execute(selection, hCr1, OffsetFaceOptions())
 options.ExtrudeType = ExtrudeType.ForceCut
 result = ExtrudeFaces.Execute(selection, -hCr1-hEtch, options)
+
 ######################################################################
+
 ######################################################################
+
 def pointAllocate(distP,angP):
     seloc =Selection.Create(DatumPointCreator.Create(Point.Create(0, MM(distP), 0)).CreatedPoint)
     move = Move.Rotate(seloc, Line.Create(Point.Origin, Direction.DirZ), angP-DEG(45), MoveOptions())
@@ -189,6 +194,8 @@ curves.Add(CurveSegment.Create(end1,end2))
 designResult = PlanarBody.Create(Plane.PlaneXY, curves)
 designBody2 = designResult.CreatedBody
 
+##########################
+
 # Cut substrate
 selection = Selection.Create(designBody1.Faces)
 options = ExtrudeFaceOptions()
@@ -204,17 +211,22 @@ options.ExtrudeType = ExtrudeType.ForceCut
 result = ExtrudeFaces.Execute(selection, hAu+hCr2, options)
 
 ######################################################################
-######################################################################
+
 # Round Edges to show edged region
 selectFirstRing= EdgeSelection.Create(GetRootPart().Bodies[0].Faces[8].Edges)
 result = ConstantRound.Execute(selectFirstRing, MM(hEtch), ConstantRoundOptions())
 selectSecondRing2 = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[9].Edges)
 result2 = ConstantRound.Execute(selectSecondRing2, MM(hEtch), ConstantRoundOptions())
 
+######################################################################
+# END OF SURFACE APPROACH
+
 # Set Section View and Zoom to Entity
-showLayersSeparated(0.1)
+# showLayersSeparated(0.1)
 createPlane(Parameters.PlaneAngle)
-#result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
+# result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
 Selection.Clear()
 ViewHelper.ZoomToEntity()
 # EndBlock
+
+#######################################################################

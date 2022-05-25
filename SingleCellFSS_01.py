@@ -129,7 +129,7 @@ selectSecondRing = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[7].Edges)
 result2 = ConstantRound.Execute(selectSecondRing, MM(hEtch), ConstantRoundOptions())
 
 ######################################################################
-# END OF REVOLVE WAY
+# END OF REVOLVE APPROACH
 
 # Set Section View and Zoom to Entity
 #showLayersSeparated(0.1)
