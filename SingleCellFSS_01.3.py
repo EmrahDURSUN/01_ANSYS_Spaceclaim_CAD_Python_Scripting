@@ -1,3 +1,4 @@
+
 # Python Script, API Version = V22 Beta
 from SpaceClaim.Api.V22.Geometry import Point
 import math
@@ -65,7 +66,9 @@ ColorHelper.SetColor(Selection.CreateByNames('ChromiumForSurfacePassivation'), C
 ######################################################################
 
 gap = dEtch/radius*(180/math.pi)
-
+dnaGap = dnaT/(radius)*(180/math.pi)
+# dnaGapUzak = dnaT/(radius + width - dnaT)*(180/math.pi)
+    
 def pointAllocateFirst( distP, angP):
     seloc =Selection.Create(DatumPointCreator.Create(Point.Create(0, MM(distP), 0)).CreatedPoint)
     move = Move.Rotate(seloc, Line.Create(Point.Origin, Direction.DirZ), angP-DEG(45), MoveOptions())
@@ -97,69 +100,8 @@ def surfaceCutOperation(offset, extrudeDistance):
     options = ExtrudeFaceOptions()
     off = OffsetFaces.Execute(selection, offset, OffsetFaceOptions())
     options.ExtrudeType = ExtrudeType.ForceCut
-    result = ExtrudeFaces.Execute(selection, extrudeDistance, options)
-    
-######################################################################
-    
-pointAllocateFirst( radius ,DEG(45)+angle)
-pointAllocateFirst( radius, angle-angle-DEG(45)-angle)
-pointAllocateFirst( radius+width, DEG(45)+angle)
-pointAllocateFirst( radius+width, angle-angle-DEG(45)-angle)
-    
-designBody1 = surfaceCutOperation(hCr1, hAu+hCr2)
-        
-######################################################################
-pointAllocateFirst( radius-dEtch, DEG(45)+angle+DEG(gap))
-pointAllocateFirst( radius-dEtch, angle-angle-DEG(45)-angle-DEG(gap))
-pointAllocateFirst( radius+width+dEtch, DEG(45)+angle+DEG(gap))
-pointAllocateFirst( radius+width+dEtch, angle-angle-DEG(45)-angle-DEG(gap))
-                
-designBody2 = surfaceCutOperation(hCr1, -hCr1-hEtch)
-
-######################################################################
-######################################################################
-######################################################################
-
-pointAllocateSecond( radius, DEG(45)+DEG(90)-angle-oangle )
-pointAllocateSecond( radius,-(DEG(45)+DEG(90)-angle-oangle ))
-pointAllocateSecond( radius+width, DEG(45)+DEG(90)-angle-oangle)
-pointAllocateSecond( radius+width, -(DEG(45)+DEG(90)-angle-oangle))
-           
-designBody3 = surfaceCutOperation(hCr1, hAu+hCr2)
-
-######################################################################
-
-pointAllocateSecond( radius-dEtch, DEG(45)+DEG(90)-angle+DEG(gap)-oangle)
-pointAllocateSecond( radius-dEtch, -(DEG(45)+DEG(90)-angle+DEG(gap)-oangle))
-pointAllocateSecond( radius+width+dEtch, DEG(45)+DEG(90)-angle+DEG(gap)-oangle)
-pointAllocateSecond( radius+width+dEtch, -(DEG(45)+DEG(90)-angle+DEG(gap)-oangle))
-           
-designBody4 = surfaceCutOperation(hCr1, -hCr1-hEtch)
-######################################################################
-
-######################################################################
-
-# Round Edges to show edged region
-selectFirstRing= EdgeSelection.Create(GetRootPart().Bodies[0].Faces[8].Edges)
-result = ConstantRound.Execute(selectFirstRing, MM(hEtch), ConstantRoundOptions())
-selectSecondRing2 = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[9].Edges)
-result2 = ConstantRound.Execute(selectSecondRing2, MM(hEtch), ConstantRoundOptions())
-
-######################################################################
-# END OF SURFACE APPROACH
-
-######################################################################
-
-dnaGap = dnaT/radius*(180/math.pi)
-
-def pointAllocateFirst( distP, angP):
-    seloc =Selection.Create(DatumPointCreator.Create(Point.Create(0, MM(distP), 0)).CreatedPoint)
-    move = Move.Rotate(seloc, Line.Create(Point.Origin, Direction.DirZ), angP-DEG(45), MoveOptions())
-    
-def pointAllocateSecond(distP,angP):
-    seloc =Selection.Create(DatumPointCreator.Create(Point.Create(0, MM(distP), 0)).CreatedPoint)
-    move = Move.Rotate(seloc, Line.Create(Point.Origin, Direction.DirZ), angP-DEG(45+180), MoveOptions())
-    
+    result = ExtrudeFaces.Execute(selection, extrudeDistance, options)   # ForceCut
+  
 def dnaExtrudsion(offset, extrudeDistance):   
     start1 =(GetRootPart().DatumPoints[0]).Position
     end1 = (GetRootPart().DatumPoints[1]).Position
@@ -183,33 +125,9 @@ def dnaExtrudsion(offset, extrudeDistance):
     options = ExtrudeFaceOptions()    
     off = OffsetFaces.Execute(selection, offset, OffsetFaceOptions())
     options.ExtrudeType = ExtrudeType.ForceIndependent
-    result = ExtrudeFaces.Execute(selection, extrudeDistance, options)
+    result = ExtrudeFaces.Execute(selection, extrudeDistance, options)  # ForceIndependent
 
-pointAllocateFirst( radius+dnaT, DEG(45)+angle)
-pointAllocateFirst( radius+dnaT, angle-angle-DEG(45)-angle)
-pointAllocateFirst( radius+width-dnaT, DEG(45)+angle)
-pointAllocateFirst( radius+width-dnaT, angle-angle-DEG(45)-angle)
-
-designBody1 = dnaExtrudsion(hCr1-dnaT, dnaT)
-
-pointAllocateFirst( radius-dEtch, DEG(45)+angle+DEG(gap))
-pointAllocateFirst( radius-dEtch, angle-angle-DEG(45)-angle-DEG(gap))
-pointAllocateFirst( radius+width+dEtch, DEG(45)+angle+DEG(gap))
-pointAllocateFirst( radius+width+dEtch, angle-angle-DEG(45)-angle-DEG(gap))
-                
-designBody2 = dnaExtrudsion(hCr1-dnaT, dnaT)
-
-
-# Intersect Bodies
-targets = BodySelection.Create(GetRootPart().Bodies[5])
-tools =  BodySelection.Create(GetRootPart().Bodies[4])
-options = MakeSolidsOptions()
-options.KeepCutter = False
-result = Combine.Intersect(targets, tools, options)
-GetRootPart().Bodies[5].Delete()
-# EndBlock
-
-def dnaExtrudsionCut(offset, extrudeDistance):   
+def dnaExtrudsionCut(offset, extrudeDistance):
     start1 =(GetRootPart().DatumPoints[0]).Position
     end1 = (GetRootPart().DatumPoints[1]).Position
     start2 =(GetRootPart().DatumPoints[2]).Position
@@ -232,23 +150,104 @@ def dnaExtrudsionCut(offset, extrudeDistance):
     options = ExtrudeFaceOptions()    
     off = OffsetFaces.Execute(selection, offset, OffsetFaceOptions())
     options.ExtrudeType = ExtrudeType.ForceCut
-    result = ExtrudeFaces.Execute(selection, extrudeDistance, options)
+    result = ExtrudeFaces.Execute(selection, extrudeDistance, options)  # Force Cut
 
-pointAllocateFirst( radius ,DEG(45)+angle)
-pointAllocateFirst( radius, angle-angle-DEG(45)-angle)
-pointAllocateFirst( radius+width, DEG(45)+angle)
-pointAllocateFirst( radius+width, angle-angle-DEG(45)-angle)
     
-designBody3 = dnaExtrudsion(hCr1-dnaT, hAu+dnaT)
+######################################################################
+    
+pointAllocateFirst( radius, DEG(45)+angle)
+pointAllocateFirst( radius, -DEG(45)-angle)
+pointAllocateFirst( radius+width, DEG(45)+angle)
+pointAllocateFirst( radius+width, -DEG(45)-angle)
+    
+designBody1 = surfaceCutOperation(hCr1, hAu+hCr2)
+        
+######################################################################
+pointAllocateFirst( radius - dEtch, DEG(45) + angle + DEG(gap))
+pointAllocateFirst( radius - dEtch, -DEG(45) - angle - DEG(gap))
+pointAllocateFirst( radius + width + dEtch, DEG(45) + angle + DEG(gap))
+pointAllocateFirst( radius + width + dEtch, -DEG(45) - angle - DEG(gap))
+                
+designBody2 = surfaceCutOperation(hCr1, -hCr1 - hEtch)
 
-pointAllocateFirst( radius+dnaT, DEG(45)+angle-DEG(dnaGap))
-pointAllocateFirst( radius+dnaT, angle-angle-DEG(45)-angle+DEG(dnaGap))
-pointAllocateFirst( radius+width-dnaT, DEG(45)+angle-DEG(dnaGap))
-pointAllocateFirst( radius+width-dnaT, angle-angle-DEG(45)-angle+DEG(dnaGap))
+######################################################################
+######################################################################
+######################################################################
 
-designBody4 = dnaExtrudsionCut(hCr1-dnaT, hAu+dnaT)
+pointAllocateSecond( radius, DEG(45)+DEG(90) - angle - oangle )
+pointAllocateSecond( radius, -(DEG(45)+DEG(90)-angle - oangle ))
+pointAllocateSecond( radius + width, DEG(45) + DEG(90) - angle - oangle)
+pointAllocateSecond( radius + width, -(DEG(45) + DEG(90) - angle - oangle))
+           
+designBody3 = surfaceCutOperation(hCr1, hAu+hCr2)
 
-# Merge Bodies
+######################################################################
+
+pointAllocateSecond( radius - dEtch, DEG(45) + DEG(90) - angle + DEG(gap) - oangle)
+pointAllocateSecond( radius - dEtch, -(DEG(45) + DEG(90) - angle + DEG(gap) - oangle))
+pointAllocateSecond( radius + width + dEtch, DEG(45) + DEG(90) - angle + DEG(gap) - oangle)
+pointAllocateSecond( radius + width + dEtch, -(DEG(45) + DEG(90) - angle + DEG(gap) - oangle))
+           
+designBody4 = surfaceCutOperation(hCr1, -hCr1-hEtch)
+######################################################################
+
+######################################################################
+
+# Round Edges to show edged region
+selectFirstRing= EdgeSelection.Create(GetRootPart().Bodies[0].Faces[8].Edges)
+result = ConstantRound.Execute(selectFirstRing, MM(hEtch), ConstantRoundOptions())
+selectSecondRing2 = EdgeSelection.Create(GetRootPart().Bodies[0].Faces[9].Edges)
+result2 = ConstantRound.Execute(selectSecondRing2, MM(hEtch), ConstantRoundOptions())
+
+######################################################################
+# END OF SURFACE APPROACH
+
+######################################################################
+
+# DNA LAYER
+
+pointAllocateFirst( radius + dnaT, DEG(45) + angle)
+pointAllocateFirst( radius + dnaT, - DEG(45) - angle)
+pointAllocateFirst( radius + width - dnaT, DEG(45) + angle)
+pointAllocateFirst( radius + width - dnaT, - DEG(45) - angle)
+
+designBody1 = dnaExtrudsion(hCr1-dnaT, dnaT)
+######################################################################
+
+pointAllocateFirst( radius - dEtch, DEG(45) + angle + DEG(gap))
+pointAllocateFirst( radius - dEtch, -DEG(45) - angle - DEG(gap))
+pointAllocateFirst( radius + width + dEtch, DEG(45) + angle + DEG(gap))
+pointAllocateFirst( radius + width + dEtch, -DEG(45) - angle - DEG(gap))
+                
+designBody2 = dnaExtrudsion(hCr1-dnaT, dnaT)
+
+# Intersect Bodies
+targets = BodySelection.Create(GetRootPart().Bodies[5])
+tools =  BodySelection.Create(GetRootPart().Bodies[4])
+options = MakeSolidsOptions()
+options.KeepCutter = False
+result = Combine.Intersect(targets, tools, options)
+GetRootPart().Bodies[5].Delete()
+# EndBlock
+
+######################################################################
+pointAllocateFirst( radius ,DEG(45) + angle)
+pointAllocateFirst( radius, -DEG(45) - angle)
+pointAllocateFirst( radius+width, DEG(45) + angle)
+pointAllocateFirst( radius+width, -DEG(45) - angle)
+    
+designBody3 = dnaExtrudsion(hCr1-dnaT, hAu + dnaT)
+
+######################################################################
+
+pointAllocateFirst( radius + dnaT, DEG(45) + angle - DEG(dnaGap))
+pointAllocateFirst( radius + dnaT, -DEG(45) - angle + DEG(dnaGap))
+pointAllocateFirst( radius + width - dnaT, DEG(45) + angle - DEG(dnaGap))
+pointAllocateFirst( radius + width - dnaT, -DEG(45) - angle + DEG(dnaGap))
+
+designBody4 = surfaceCutOperation(hCr1-dnaT, hAu+dnaT)
+
+# Merge Bodies = Merge two seperated DNA solid layers into one
 targets = BodySelection.Create([GetRootPart().Bodies[5],
     GetRootPart().Bodies[4]])
 result = Combine.Merge(targets)
@@ -259,9 +258,9 @@ result = Combine.Merge(targets)
 # Set Section View and Zoom to Entity
 # showLayersSeparated(0.1)
 createPlane(Parameters.PlaneAngle)
-result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
+#result = ViewHelper.SetSectionPlane(Plane.PlaneYZ)
 Selection.Clear()
-ViewHelper.ZoomToEntity()
+#ViewHelper.ZoomToEntity()
 # EndBlock
+######################################################################
 
-#######################################################################
