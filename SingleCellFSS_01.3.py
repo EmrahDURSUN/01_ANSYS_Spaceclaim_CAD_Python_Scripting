@@ -1,4 +1,3 @@
-
 # Python Script, API Version = V22 Beta
 from SpaceClaim.Api.V22.Geometry import Point
 import math
@@ -18,6 +17,7 @@ oangle=Parameters.OpeningAngle
 hEtch=Parameters.EtchHeight
 dEtch=Parameters.EtchDepth
 dnaT = Parameters.DNA
+opRegion = Parameters.OpenRegion
 # End Parameters
 
 # Constructor Show Each Layer Seperately 
@@ -156,6 +156,7 @@ targets = BodySelection.Create([GetRootPart().Bodies[5],
     GetRootPart().Bodies[4]])
 result = Combine.Merge(targets)
 # EndBlock
+GetRootPart().Bodies[4].SetName("DNA Large Ring")
 ######################################################################
 
 ## SECOND RING 
@@ -170,16 +171,52 @@ targets = BodySelection.Create([GetRootPart().Bodies[5],
     GetRootPart().Bodies[6]])
 result = Combine.Merge(targets)
 # EndBlock
+GetRootPart().Bodies[5].SetName("DNA Small Ring")
+######################################################################
+
 
 ######################################################################
+
+# Create Radiation Region
+upperFace =( (opRegion - subThick) / 2 ) + hCr1 + hCr2 + hAu
+lowerFace = opRegion - upperFace + hCr1 + hCr2 + hAu
+result = BlockBody.Create(Point.Create(MM(-per), MM(-per), MM(upperFace)), Point.Create(MM(per), MM(per), MM(-lowerFace)), ExtrudeType.ForceIndependent)
+GetRootPart().Bodies[6].SetName("Region")
+
+selection = BodySelection.Create(GetRootPart().Bodies[6])
+options = SetColorOptions()
+options.FaceColorTarget = FaceColorTarget.Body
+ColorHelper.SetColor(selection, options, ColorHelper.Red)
+ColorHelper.SetFillStyle(selection, FillStyle.Transparent)
+# EndBlock
+
 
 # Set Section View and Zoom to Entity
 # showLayersSeparated(0.1)
 createPlane(Parameters.PlaneAngle)
 #ViewHelper.SetSectionPlane(Selection.Create(GetRootPart().DatumPlanes[0]), None)
-
 #ViewHelper.SetSectionPlane(Plane.PlaneYZ)
 Selection.Clear()
 #ViewHelper.ZoomToEntity()
 # EndBlock
-######################################################################
+
+
+###############################################################''''''''''''''''''''''''''''''''''''''''
+
+# Change Object Visibility
+
+
+selection = BodySelection.Create(GetRootPart().Bodies[6])
+visibility = VisibilityType.Hide
+inSelectedView = False
+faceLevel = False
+ViewHelper.SetObjectVisibility(selection, visibility, inSelectedView, faceLevel)
+# EndBlock
+
+# Fix 2 Interferences
+
+#selection = Selection.CreateByNames('Substrate','ChromiumForAdhesion','Gold Layer','ChromiumForSurfacePassivation',"DNA Large Ring","DNA Small Ring")
+options = FixInterferenceOptions()
+options.CutSmallerBody = True
+result = FixInterference.FindAndFix(options)
+# EndBlock
