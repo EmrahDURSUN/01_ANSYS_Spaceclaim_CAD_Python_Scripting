@@ -3,6 +3,10 @@ from SpaceClaim.Api.V22.Geometry import Point
 import math
 
 ClearAll()
+Layers.Create("Base")
+selection = Selection.Create(Layers.GetAllLayers())
+Delete.Execute(selection)
+Layers.Create("Base")
 
 # Get Input Parameters
 per=Parameters.Periodicity/2
@@ -225,8 +229,81 @@ ViewHelper.SetObjectVisibility(selection,visibility,False,False)
 # showLayersSeparated(0.1)
 createPlane(Parameters.PlaneAngle)
 #ViewHelper.SetSectionPlane(Selection.Create(GetRootPart().DatumPlanes[0]), None)
-ViewHelper.SetSectionPlane(Plane.PlaneYZ)
+#ViewHelper.SetSectionPlane(Plane.PlaneYZ)
 Selection.Clear()
 #ViewHelper.ZoomToEntity()
 
 ###############################################################
+
+## Move All Bodies to New Component and Rename it
+#selection = BodySelection.Create(GetRootPart().GetAllBodies())
+#result = ComponentHelper.MoveBodiesToComponent(selection, None)
+## Rename 'Component1' to 'Single_Cell'
+#selection = PartSelection.Create(GetRootPart().Components[0].Content)
+#result = RenameObject.Execute(selection,"Single_Cell")
+## EndBlock
+
+###############################################################
+
+# Create Pattern
+selection = BodySelection.Create(GetRootPart().GetAllBodies())
+data = LinearPatternData()
+data.PatternDimension = PatternDimensionType.Two
+data.LinearDirection = Selection.Create(GetRootPart().CoordinateSystems[0].Axes[1])
+data.CountX = 5
+data.PitchX = UM(416)
+data.CountY = 5
+data.PitchY = UM(416)
+result = Pattern.CreateLinear(selection, data, None)
+# EndBlock
+
+## Create Pattern
+#selection = FaceSelection.Create([GetRootPart().Bodies[7].Faces[4],
+#   GetRootPart().Bodies[7].Faces[5],
+#   GetRootPart().Bodies[7].Faces[6],
+#   GetRootPart().Bodies[7].Faces[7]])
+#data = FillPatternData()
+#data.LinearDirection = EdgeSelection.Create(GetRootPart().Bodies[7].Edges[6])
+#data.FillPatternType = FillPatternType.Offset
+#data.XSpacing = UM(450)
+#data.YSpacing = UM(500)
+#data.Margin = UM(55)
+#result = Pattern.CreateFill(selection, data, None)
+## EndBlock
+
+selection=BodySelection.CreateByNames("Substrate")
+Combine.Merge(selection)
+selection=BodySelection.CreateByNames("ChromiumForAdhesion")
+Combine.Merge(selection)
+selection=BodySelection.CreateByNames("Gold Layer")
+Combine.Merge(selection)
+selection=BodySelection.CreateByNames("ChromiumForSurfacePassivation")
+Combine.Merge(selection)
+selection=BodySelection.CreateByNames("DNA Large Ring")
+result = ComponentHelper.MoveBodiesToComponent(selection, None)
+
+selection=BodySelection.CreateByNames("DNA Small Ring")
+result = ComponentHelper.MoveBodiesToComponent(selection, None)
+
+selection=BodySelection.CreateByNames("Region")
+Combine.Merge(selection)
+
+# Create New Layer
+selection = ComponentSelection.Create(GetRootPart().Components[4])
+result = Layers.Create(selection, None)
+# EndBlock
+
+selection=ComponentSelection.Create([GetRootPart().Components[6],
+    GetRootPart().Components[0],
+    GetRootPart().Components[1],
+    GetRootPart().Components[2],
+    GetRootPart().Components[3],
+    GetRootPart().Components[4],
+    GetRootPart().Components[5]])
+Delete.Execute(selection)
+Layers.Create("Substrate")
+# Move Objects to Layer: Substrate
+selection = BodySelection.Create(GetRootPart().Bodies[0])
+layerName = r"Substrate"
+result = Layers.MoveTo(selection, layerName)
+# EndBlock
