@@ -1,15 +1,14 @@
+
 # Python Script, API Version = V22 Beta
 from SpaceClaim.Api.V22.Geometry import Point
 import math
 
 ClearAll()
-Layers.Create("Base")
-selection = Selection.Create(Layers.GetAllLayers())
-Delete.Execute(selection)
-Layers.Create("Base")
+Layers.DeleteEmpties()
 
 # Get Input Parameters
 per=Parameters.Periodicity/2
+periodicity=Parameters.Periodicity
 subThick=Parameters.SubsThickness
 hCr1=Parameters.ChromiumForAdhesion
 hAu=Parameters.GoldLayer
@@ -172,7 +171,6 @@ GetRootPart().Bodies[4].SetName("DNA Large Ring")
 result =surfaceCutOperation( 5, radius - dEtch,        radius + width + dEtch,       DEG(135) - angle - oangle + DEG(dnaGap),             hCr1,           -dnaT)  #Second Ring BuildDown
 result = surfaceCutOperation( 4, radius + dnaT,        radius + width - dnaT,         DEG(135) - angle - oangle,                              hCr1,            -dnaT)  #Second Ring CutDown       # BOTTOM Section completed
 
-
 surfaceCutOperation( 5, radius,                   radius + width,                    DEG(135) - angle - oangle,                              hCr1-dnaT,    hAu + dnaT) #Second Ring Build Up
 surfaceCutOperation( 4, radius + dnaT,        radius + width - dnaT,         DEG(135) - angle - oangle - DEG(dnaGap),            hCr1-dnaT,    hAu + dnaT)  #Second Cut Down    # UPPER Section completed
 
@@ -192,7 +190,6 @@ upperFace =( (opRegion - subThick) / 2 ) + hCr1 + hCr2 + hAu
 lowerFace = opRegion - upperFace + hCr1 + hCr2 + hAu
 result = BlockBody.Create(Point.Create(MM(-per), MM(-per), MM(upperFace)), Point.Create(MM(per), MM(per), MM(-lowerFace)), ExtrudeType.ForceIndependent)
 result.CreatedBody.SetName('Region')
-
 
 selection = BodySelection.Create(GetRootPart().Bodies[6])
 options = SetColorOptions()
@@ -225,6 +222,119 @@ ViewHelper.SetObjectVisibility(selection,visibility,False,False)
 
 ###############################################################
 
+# Move All Bodies to New Component and Rename it
+selection = BodySelection.Create(GetRootPart().GetAllBodies())
+result = ComponentHelper.MoveBodiesToComponent(selection, None)
+# Rename 'Component1' to 'Single_Cell'
+selection = PartSelection.Create(GetRootPart().Components[0].Content)
+result = RenameObject.Execute(selection,"Single_Cell")
+# EndBlock
+
+################################################################
+
+numi = (Parameters.numberSingleCells)-3
+offs = -((numi/2)*periodicity)
+
+# Translate Along X  an Y Handle
+selection = ComponentSelection.Create(GetRootPart().Components[0])
+
+direction = Move.GetDirection(selection, HandleAxis.X)
+result = Move.Translate(selection, direction, offs , MoveOptions())
+
+direction = Move.GetDirection(selection, HandleAxis.Y)
+result = Move.Translate(selection, direction, offs , MoveOptions())
+# End Block
+
+
+# Create Pattern
+numi = (Parameters.numberSingleCells)-2
+selection = ComponentSelection.Create(GetRootPart().GetAllComponents())
+data = LinearPatternData()
+data.PatternDimension = PatternDimensionType.Two
+data.LinearDirection = Selection.Create(GetRootPart().CoordinateSystems[0].Axes[1])
+data.CountX = numi
+data.PitchX = periodicity
+data.CountY = numi
+data.PitchY = periodicity
+result = Pattern.CreateLinear(selection, data, None)
+# EndBlock
+
+###############################################################
+
+###############################################################
+
+#selection=BodySelection.CreateByNames("Substrate")
+#Combine.Merge(selection)
+#selection=BodySelection.CreateByNames("ChromiumForAdhesion")
+#Combine.Merge(selection)
+#selection=BodySelection.CreateByNames("Gold Layer")
+#Combine.Merge(selection)
+#selection=BodySelection.CreateByNames("ChromiumForSurfacePassivation")
+#Combine.Merge(selection)
+
+#selection=BodySelection.CreateByNames("DNA Large Ring")
+#result = ComponentHelper.MoveBodiesToComponent(selection, None)
+#selection=BodySelection.CreateByNames("DNA Small Ring")
+#result = ComponentHelper.MoveBodiesToComponent(selection, None)
+
+#selection=BodySelection.CreateByNames("Region")
+#Combine.Merge(selection)
+###############################################################
+
+## Move Objects to Layer: Substrate
+#selection = BodySelection.Create(GetRootPart().Bodies[0])
+#layerName = r"Substrate"
+#Layers.Create("layerName")
+#result = Layers.MoveTo(selection, layerName)
+## EndBlock
+
+###############################################################
+###############################################################
+
+# Create Chip
+chipSize = Parameters.SensorSize/2
+result = BlockBody.Create(Point.Create(MM(-chipSize), MM(-chipSize), MM(0)), Point.Create(MM(chipSize), MM(chipSize), MM(-subThick)), ExtrudeType.ForceIndependent)
+body = result.CreatedBody.SetName("Chip")
+ColorHelper.SetColor(Selection.CreateByNames("Chip"), Color.FromArgb(255, 85, 71, 101))
+selection = Selection.CreateByNames("Chip")
+result = Move.Rotate(selection, Move.GetAxis(selection, HandleAxis.Z), -DEG(45), MoveOptions())
+#End Block
+
+###################################################################
+
+sensorSize = Parameters.SensorSize
+num = Parameters.numberSingleCells
+size = periodicity*num
+
+devision=sensorSize/size
+
+devi = int(devision)
+
+ #rgb(164,156,172)
+def CopyComponent(size, x, y, z):    
+    s = RectangularSurface.Create(size, size, Point.Create(-size/2, -size/2,0))
+    su = s.CreatedBody
+    su.SetName("Surface " +x.ToString() + y.ToString())
+    matrix = Matrix.CreateTranslation(Vector.Create(x*size, y*size, z))
+    su.Transform(matrix)
+     
+a=0
+b= devi-2
+c=-(devi-3)
+d=devi-2
+for x in range(a, b, 1):
+    for y in range(c, d, 1):        
+        if x ==0:
+            CopyComponent(size, x, y,0) 
+        elif x!=0:            
+            CopyComponent(size, x, y,0) 
+            x=-x
+            CopyComponent(size, x, y,0) 
+    c=c+1
+    d=d-1
+    
+###############################################################
+###############################################################
 # Set Section View and Zoom to Entity
 # showLayersSeparated(0.1)
 createPlane(Parameters.PlaneAngle)
@@ -232,78 +342,4 @@ createPlane(Parameters.PlaneAngle)
 #ViewHelper.SetSectionPlane(Plane.PlaneYZ)
 Selection.Clear()
 #ViewHelper.ZoomToEntity()
-
 ###############################################################
-
-## Move All Bodies to New Component and Rename it
-#selection = BodySelection.Create(GetRootPart().GetAllBodies())
-#result = ComponentHelper.MoveBodiesToComponent(selection, None)
-## Rename 'Component1' to 'Single_Cell'
-#selection = PartSelection.Create(GetRootPart().Components[0].Content)
-#result = RenameObject.Execute(selection,"Single_Cell")
-## EndBlock
-
-###############################################################
-
-# Create Pattern
-selection = BodySelection.Create(GetRootPart().GetAllBodies())
-data = LinearPatternData()
-data.PatternDimension = PatternDimensionType.Two
-data.LinearDirection = Selection.Create(GetRootPart().CoordinateSystems[0].Axes[1])
-data.CountX = 5
-data.PitchX = UM(416)
-data.CountY = 5
-data.PitchY = UM(416)
-result = Pattern.CreateLinear(selection, data, None)
-# EndBlock
-
-## Create Pattern
-#selection = FaceSelection.Create([GetRootPart().Bodies[7].Faces[4],
-#   GetRootPart().Bodies[7].Faces[5],
-#   GetRootPart().Bodies[7].Faces[6],
-#   GetRootPart().Bodies[7].Faces[7]])
-#data = FillPatternData()
-#data.LinearDirection = EdgeSelection.Create(GetRootPart().Bodies[7].Edges[6])
-#data.FillPatternType = FillPatternType.Offset
-#data.XSpacing = UM(450)
-#data.YSpacing = UM(500)
-#data.Margin = UM(55)
-#result = Pattern.CreateFill(selection, data, None)
-## EndBlock
-
-selection=BodySelection.CreateByNames("Substrate")
-Combine.Merge(selection)
-selection=BodySelection.CreateByNames("ChromiumForAdhesion")
-Combine.Merge(selection)
-selection=BodySelection.CreateByNames("Gold Layer")
-Combine.Merge(selection)
-selection=BodySelection.CreateByNames("ChromiumForSurfacePassivation")
-Combine.Merge(selection)
-selection=BodySelection.CreateByNames("DNA Large Ring")
-result = ComponentHelper.MoveBodiesToComponent(selection, None)
-
-selection=BodySelection.CreateByNames("DNA Small Ring")
-result = ComponentHelper.MoveBodiesToComponent(selection, None)
-
-selection=BodySelection.CreateByNames("Region")
-Combine.Merge(selection)
-
-# Create New Layer
-selection = ComponentSelection.Create(GetRootPart().Components[4])
-result = Layers.Create(selection, None)
-# EndBlock
-
-selection=ComponentSelection.Create([GetRootPart().Components[6],
-    GetRootPart().Components[0],
-    GetRootPart().Components[1],
-    GetRootPart().Components[2],
-    GetRootPart().Components[3],
-    GetRootPart().Components[4],
-    GetRootPart().Components[5]])
-Delete.Execute(selection)
-Layers.Create("Substrate")
-# Move Objects to Layer: Substrate
-selection = BodySelection.Create(GetRootPart().Bodies[0])
-layerName = r"Substrate"
-result = Layers.MoveTo(selection, layerName)
-# EndBlock
